@@ -10,9 +10,6 @@ cohorts <- paste0("OH",13:19)
 
 blues_file <- "data/ALL BLUES BY COHORT.xlsx" # file from Clay
 
-df <- read_excel(blues_file, sheet = cohort, na = c("",".","NA"))
-str(df)
-
 df_list <- lapply(cohorts, function(cohort){
   read_excel(blues_file, sheet = cohort, na = c("",".","NA")) %>%
     mutate(COHORT = cohort, .before=NAME)
@@ -58,8 +55,8 @@ non_target_markers <- colnames(X)[!colnames(X) %in% target_markers]
 nIter = 1500 # change to 15,000 when running final analysis
 burnIn = 500 # change to 3,000 when running final analysis
 
-out_matrix <- matrix(NA, nrow=3, ncol=4)
-colnames(out_matrix) <- c("test", "target mean effect", "non-target mean effect", "t-test p-value")
+out_matrix <- matrix(NA, nrow=3, ncol=5)
+colnames(out_matrix) <- c("test", "target mean effect", "non-target mean effect", "t-test p-value", "accuracy")
 
 # 1.	All 1,173 markers as random
 test_num = 1
@@ -78,7 +75,7 @@ get_bglr_stats <- function(b_target, b_non_target = NA, i, mat = out_matrix){
   )
   
   boxplot(values ~ group, data = data,
-          main = "Marker effects when all 1,173 markers are treated as random",
+          main = paste("Marker effects per marker group of scenario ", i),
           ylab = "marker effect",
           col = c("lightblue", "lightgreen"))
   
@@ -89,6 +86,7 @@ get_bglr_stats <- function(b_target, b_non_target = NA, i, mat = out_matrix){
     mat[i,4] <- t.test(b_target, b_non_target)$p.value,
     error = function(e) e
   )
+  mat[i,5] <- cor(y, m$yHat, use="complete.obs")
   return(mat)
 }
 
